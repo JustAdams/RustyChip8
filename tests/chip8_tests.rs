@@ -23,10 +23,10 @@ mod tests {
     #[test]
     fn op_00e0_clear_screen_success() {
         let mut chip8 = Chip8::new();
-        chip8.display[0][0] = true;
-        assert_eq!(chip8.display[0][0], true);
+        chip8.display.flip_pixel(0, 0) ;
+        assert_eq!(chip8.display.get_pixel(0, 0), true);
         load_run_instruction(&mut chip8, &[0x00, 0xE0]);
-        assert_eq!(false, chip8.display[0][0]);
+        assert_eq!(false, chip8.display.get_pixel(0, 0));
     }
 
     #[test]
@@ -71,7 +71,7 @@ mod tests {
     }
 
     /** Loads an instruction and runs a single cycle */
-    fn load_run_instruction(mut chip8: &mut Chip8, instruction: &[u8]) {
+    fn load_run_instruction(chip8: &mut Chip8, instruction: &[u8]) {
         chip8.load_memory(chip8.pc, &instruction);
         chip8.cycle();
     }

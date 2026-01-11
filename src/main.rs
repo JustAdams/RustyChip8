@@ -16,7 +16,7 @@ fn main() {
         // draw display to terminal
         for row in 0..chip8::HEIGHT {
             for col in 0..chip8::WIDTH {
-                if chip8.display[row][col] {
+                if chip8.display.get_pixel(row, col) {
                     print!("* ");
                 } else {
                     print!("  ");

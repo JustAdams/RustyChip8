@@ -1,8 +1,10 @@
+use crate::display::Display;
 use crate::opcode::Opcode;
 use crate::rom::ROM;
 
 pub mod rom;
 
+mod display;
 mod opcode;
 
 // TODO: display stuff should be in its own module to improve extensibility
@@ -31,7 +33,7 @@ const FONT: [u8; 80] = [
 
 pub struct Chip8 {
     pub ram: [u8; 4096],
-    pub display: [[bool; WIDTH]; HEIGHT],
+    pub display: Display,
     /** Program counter that points to the current instruction in memory */
     pub pc: u16,
     /** Index register that points to a specific location in memory */
@@ -43,7 +45,7 @@ impl Chip8 {
     pub fn new() -> Chip8 {
         let mut chip = Chip8 {
             ram: [0; 4096],
-            display: [[false; WIDTH]; HEIGHT],
+            display: Display::new(),
             pc: 0x200,
             idx_reg: 0,
             var_reg: [0; 16],
@@ -100,7 +102,7 @@ impl Chip8 {
 
     /** Clear screen */
     fn op_00e0(&mut self) {
-        self.display = [[false; WIDTH]; HEIGHT];
+        self.display.clear();
     }
 
     /** Jump - Sets the PC to NNN */
@@ -150,14 +152,15 @@ impl Chip8 {
                     break;
                 }
 
-                let y_pos = (y_coord + row as usize) & 31;
-                let curr_pixel = self.display[y_pos][x_pos];
+                let y_pos = (y_coord + row as usize) % HEIGHT;
+                let curr_pixel = self.display.get_pixel(y_pos, x_pos);
 
+                // set VF to 1 if sprite pixel and display pixel are both on
                 if curr_pixel {
                     self.var_reg[0xF] = 0x1;
                 }
 
-                self.display[y_pos][x_pos] = !curr_pixel;
+                self.display.flip_pixel(y_pos, x_pos);
             }
         }
     }
