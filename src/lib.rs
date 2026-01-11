@@ -7,7 +7,6 @@ pub mod rom;
 pub mod display;
 mod opcode;
 
-// TODO: display stuff should be in its own module to improve extensibility
 pub const WIDTH: usize = 64;
 pub const HEIGHT: usize = 32;
 const SCREEN_SIZE: usize = WIDTH * HEIGHT;
@@ -79,8 +78,12 @@ impl Chip8 {
         match nibbles {
             (0x0, 0x0, 0xE, 0x0) => self.op_00e0(),
             (0x1, _, _, _) => self.op_1nnn(opcode.nnn),
+            (0x3, _, _, _) => self.op_3xnn(opcode.x as usize, opcode.nn),
+            (0x4, _, _, _) => self.op_4xnn(opcode.x as usize, opcode.nn),
+            (0x5, _, _, _) => self.op_5xnn(opcode.x as usize, opcode.y as usize),
             (0x6, _, _, _) => self.op_6xnn(opcode.x, opcode.nn),
             (0x7, _, _, _) => self.op_7xnn(opcode.x, opcode.nn),
+            (0x9, _, _, _) => self.op_9xnn(opcode.x as usize, opcode.y as usize),
             (0xA, _, _, _) => self.op_annn(opcode.nnn),
             (0xD, _, _, _) => self.op_dxyn(opcode.x, opcode.y, opcode.n),
             _ => {
@@ -116,6 +119,34 @@ impl Chip8 {
     /** Jump - Sets the PC to NNN */
     fn op_1nnn(&mut self, nnn: u16) {
         self.pc = nnn;
+    }
+
+    /** Skip conditional - Skips instruction if VX equals NN */
+    fn op_3xnn(&mut self, x: usize, nn: u8) {
+        if self.var_reg[x] == nn {
+            self.pc += 2;
+        }
+    }
+
+    /** Skip conditional - Skips instruction if VX doesn't equal NN */
+    fn op_4xnn(&mut self, x: usize, nn: u8) {
+        if self.var_reg[x] != nn {
+            self.pc += 2;
+        }
+    }
+
+    /** Skip conditional - Skips instruction if VX equals VY */
+    fn op_5xnn(&mut self, x: usize, y: usize) {
+        if self.var_reg[x] == self.var_reg[y] {
+            self.pc += 2;
+        }
+    }
+
+    /** Skip conditional - Skips instruction if VX doesn't equal VY */
+    fn op_9xnn(&mut self, x: usize, y: usize) {
+        if self.var_reg[x] != self.var_reg[y] {
+            self.pc += 2;
+        }
     }
 
     /** Stores number NN in register VX */

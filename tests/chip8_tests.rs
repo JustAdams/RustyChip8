@@ -23,7 +23,7 @@ mod tests {
     #[test]
     fn op_00e0_clear_screen_success() {
         let mut chip8 = Chip8::new();
-        chip8.display.flip_pixel(0, 0) ;
+        chip8.display.flip_pixel(0, 0);
         assert_eq!(chip8.display.get_pixel(0, 0), true);
         load_run_instruction(&mut chip8, &[0x00, 0xE0]);
         assert_eq!(false, chip8.display.get_pixel(0, 0));
@@ -35,6 +35,37 @@ mod tests {
         assert_ne!(0x0FF, chip8.pc);
         load_run_instruction(&mut chip8, &[0x10, 0xFF]);
         assert_eq!(0x0FF, chip8.pc);
+    }
+
+    /** 3XNN */
+    #[test]
+    fn op_3xnn_skip_success() {
+        let mut chip8 = Chip8::new();
+        let pc_start = chip8.pc;
+        chip8.var_reg[0x2] = 0xFA;
+        load_run_instruction(&mut chip8, &[0x32, 0xFA]);
+        assert_eq!(pc_start + 4, chip8.pc);
+    }
+
+    /** 4XNN */
+    #[test]
+    fn op_4xnn_skip_success() {
+        let mut chip8 = Chip8::new();
+        let pc_start = chip8.pc;
+        chip8.var_reg[0x2] = 0xAB;
+        load_run_instruction(&mut chip8, &[0x42, 0xFA]);
+        assert_eq!(pc_start + 4, chip8.pc);
+    }
+
+    /** 5XNN */
+    #[test]
+    fn op_5xnn_skip_success() {
+        let mut chip8 = Chip8::new();
+        let pc_start = chip8.pc;
+        chip8.var_reg[0x2] = 0xEE;
+        chip8.var_reg[0x3] = 0xEE;
+        load_run_instruction(&mut chip8, &[0x52, 0x30]);
+        assert_eq!(pc_start + 4, chip8.pc);
     }
 
     /** 6XNN */
@@ -59,6 +90,17 @@ mod tests {
         assert_ne!(chip8.var_reg[x], val);
         load_run_instruction(&mut chip8, &[0x73, 0x12]);
         assert_eq!(chip8.var_reg[x], 0x18);
+    }
+
+    /** 9XNN */
+    #[test]
+    fn op_9xnn_skip_success() {
+        let mut chip8 = Chip8::new();
+        let pc_start = chip8.pc;
+        chip8.var_reg[0x2] = 0xEE;
+        chip8.var_reg[0x3] = 0xAB;
+        load_run_instruction(&mut chip8, &[0x92, 0x30]);
+        assert_eq!(pc_start + 4, chip8.pc);
     }
 
     /** ANNN */
