@@ -5,7 +5,7 @@ mod tests {
     fn initialized_correctly() {
         let chip = Chip8::new();
         assert_eq!(chip.ram.len(), 4096);
-        assert_eq!(chip.pc, 0x0);
+        assert_eq!(chip.pc, 0x200);
     }
 
     #[test]
@@ -21,15 +21,16 @@ mod tests {
     }
 
     #[test]
-    fn clear_screen_success() {
+    fn op_00e0_clear_screen_success() {
         let mut chip8 = Chip8::new();
         chip8.display[0][0] = true;
+        assert_eq!(chip8.display[0][0], true);
         load_run_instruction(&mut chip8, &[0x00, 0xE0]);
         assert_eq!(false, chip8.display[0][0]);
     }
 
     #[test]
-    fn jump_success() {
+    fn op_1nnn_jump_success() {
         let mut chip8 = Chip8::new();
         assert_ne!(0x0FF, chip8.pc);
         load_run_instruction(&mut chip8, &[0x10, 0xFF]);
@@ -38,10 +39,11 @@ mod tests {
 
     /** 6XNN */
     #[test]
-    fn store_register_success() {
+    fn op_6xnn_store_register_success() {
         let mut chip8 = Chip8::new();
         let x = 0x3;
         let val = 0x12;
+        chip8.var_reg[x] = 0x6;
         assert_ne!(chip8.var_reg[x], val);
         load_run_instruction(&mut chip8, &[0x63, 0x12]);
         assert_eq!(chip8.var_reg[x], val);
@@ -49,18 +51,19 @@ mod tests {
 
     /** 7XNN */
     #[test]
-    fn add_register_success() {
+    fn op_7xnn_add_register_success() {
         let mut chip8 = Chip8::new();
         let x = 0x3;
         let val = 0x12;
+        chip8.var_reg[x] = 0x6;
         assert_ne!(chip8.var_reg[x], val);
         load_run_instruction(&mut chip8, &[0x73, 0x12]);
-        assert_eq!(chip8.var_reg[x], val);
+        assert_eq!(chip8.var_reg[x], 0x18);
     }
 
     /** ANNN */
     #[test]
-    fn set_index_register() {
+    fn op_annn_set_index_register() {
         let mut chip8 = Chip8::new();
         assert_ne!(0x123, chip8.idx_reg);
         load_run_instruction(&mut chip8, &[0xA1, 0x23]);

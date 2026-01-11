@@ -44,7 +44,7 @@ impl Chip8 {
         let mut chip = Chip8 {
             ram: [0; 4096],
             display: [[false; WIDTH]; HEIGHT],
-            pc: 0,
+            pc: 0x200,
             idx_reg: 0,
             var_reg: [0; 16],
         };
@@ -113,7 +113,7 @@ impl Chip8 {
         if x >= self.var_reg.len() as u8 {
             panic!("Invalid variable register access attempted");
         }
-        self.var_reg[x as usize] += nn;
+        self.var_reg[x as usize] = nn;
     }
 
     /** Adds NN to register VX */
@@ -121,7 +121,7 @@ impl Chip8 {
         if x >= self.var_reg.len() as u8 {
             panic!("Invalid variable register access attempted");
         }
-        self.var_reg[x as usize] += nn;
+        self.var_reg[x as usize] = self.var_reg[x as usize].wrapping_add(nn);
     }
 
     /** Sets index register to NNN */
@@ -130,26 +130,34 @@ impl Chip8 {
     }
 
     fn op_dxyn(&mut self, x: u8, y: u8, n: u8) {
-        self.var_reg[0xF] = 0;
+        let y_coord = self.var_reg[y as usize] as usize;
+        let x_coord = self.var_reg[x as usize] as usize & (WIDTH - 1);
+
+        self.var_reg[0xF] = 0x0;
 
         for row in 0..n {
-            let curr_idx = self.idx_reg + (row as u16);
-            let sprite_byte: u8 = self.ram[curr_idx as usize];
-
-            let y_coord = (self.var_reg[y as usize] + row) as usize % WIDTH;
+            // get the Nth byte of sprite data starting from address at idx_reg
+            let sprite_data: u8 = self.ram[(self.idx_reg + row as u16) as usize];
+            // for each bit in sprite data...
             for col in 0..8 {
-                let x_coord = (self.var_reg[x as usize] + col) as usize % HEIGHT;
-                let bit: bool = sprite_byte >> (7 - col) & 1 == 1;
-                let display_bit: bool = self.display[x_coord][y_coord];
-
-                if bit {
-                    if display_bit {
-                        self.var_reg[0xF] = 0;
-                        self.display[y_coord][x_coord] = false;
-                    } else {
-                        self.display[y_coord][x_coord] = true;
-                    }
+                let sprite_pixel = (sprite_data >> (7 - col)) & 0x1 == 1;
+                if !sprite_pixel {
+                    continue;
                 }
+
+                let x_pos = x_coord + col as usize;
+                if x_pos >= WIDTH {
+                    break;
+                }
+
+                let y_pos = (y_coord + row as usize) & 31;
+                let curr_pixel = self.display[y_pos][x_pos];
+
+                if curr_pixel {
+                    self.var_reg[0xF] = 0x1;
+                }
+
+                self.display[y_pos][x_pos] = !curr_pixel;
             }
         }
     }
