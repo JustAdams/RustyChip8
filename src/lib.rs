@@ -1,4 +1,7 @@
 use crate::opcode::Opcode;
+use crate::rom::ROM;
+
+pub mod rom;
 
 mod opcode;
 
@@ -28,7 +31,7 @@ const FONT: [u8; 80] = [
 
 pub struct Chip8 {
     pub ram: [u8; 4096],
-    pub display: [bool; SCREEN_SIZE],
+    pub display: [[bool; WIDTH]; HEIGHT],
     /** Program counter that points to the current instruction in memory */
     pub pc: u16,
     /** Index register that points to a specific location in memory */
@@ -38,13 +41,12 @@ pub struct Chip8 {
 }
 impl Chip8 {
     pub fn new() -> Chip8 {
-        let mut chip =
-            Chip8 {
+        let mut chip = Chip8 {
             ram: [0; 4096],
-            display: [false; 64 * 32],
+            display: [[false; WIDTH]; HEIGHT],
             pc: 0,
             idx_reg: 0,
-                var_reg: [0; 16],
+            var_reg: [0; 16],
         };
 
         for i in 0..FONT.len() {
@@ -52,6 +54,9 @@ impl Chip8 {
         }
 
         chip
+    }
+    pub fn load_rom(&mut self, rom: ROM) {
+        self.load_memory(0x200, &rom.data);
     }
 
     /** Performs a single fetch, decode, and execute cycle */
@@ -95,7 +100,7 @@ impl Chip8 {
 
     /** Clear screen */
     fn op_00e0(&mut self) {
-        self.display = [false; SCREEN_SIZE];
+        self.display = [[false; WIDTH]; HEIGHT];
     }
 
     /** Jump - Sets the PC to NNN */
@@ -105,7 +110,7 @@ impl Chip8 {
 
     /** Stores number NN in register VX */
     fn op_6xnn(&mut self, x: u8, nn: u8) {
-        if x < 0 || x >= self.var_reg.len() as u8 {
+        if x >= self.var_reg.len() as u8 {
             panic!("Invalid variable register access attempted");
         }
         self.var_reg[x as usize] += nn;
@@ -113,7 +118,7 @@ impl Chip8 {
 
     /** Adds NN to register VX */
     fn op_7xnn(&mut self, x: u8, nn: u8) {
-        if x < 0 || x >= self.var_reg.len() as u8 {
+        if x >= self.var_reg.len() as u8 {
             panic!("Invalid variable register access attempted");
         }
         self.var_reg[x as usize] += nn;
@@ -125,9 +130,27 @@ impl Chip8 {
     }
 
     fn op_dxyn(&mut self, x: u8, y: u8, n: u8) {
-        let x_coord = self.var_reg[x as usize];
-        let y_coord = self.var_reg[y as usize];
+        self.var_reg[0xF] = 0;
 
+        for row in 0..n {
+            let curr_idx = self.idx_reg + (row as u16);
+            let sprite_byte: u8 = self.ram[curr_idx as usize];
 
+            let y_coord = (self.var_reg[y as usize] + row) as usize % WIDTH;
+            for col in 0..8 {
+                let x_coord = (self.var_reg[x as usize] + col) as usize % HEIGHT;
+                let bit: bool = sprite_byte >> (7 - col) & 1 == 1;
+                let display_bit: bool = self.display[x_coord][y_coord];
+
+                if bit {
+                    if display_bit {
+                        self.var_reg[0xF] = 0;
+                        self.display[y_coord][x_coord] = false;
+                    } else {
+                        self.display[y_coord][x_coord] = true;
+                    }
+                }
+            }
+        }
     }
 }

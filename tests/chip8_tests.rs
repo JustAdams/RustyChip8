@@ -23,9 +23,9 @@ mod tests {
     #[test]
     fn clear_screen_success() {
         let mut chip8 = Chip8::new();
-        chip8.display[0] = true;
+        chip8.display[0][0] = true;
         load_run_instruction(&mut chip8, &[0x00, 0xE0]);
-        assert_eq!(false, chip8.display[0]);
+        assert_eq!(false, chip8.display[0][0]);
     }
 
     #[test]
