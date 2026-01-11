@@ -8,7 +8,7 @@ fn main() {
     let mut chip8: Chip8 = Chip8::new();
     (&mut chip8).load_rom(rom);
 
-    let mut is_running: bool = true;
+    let is_running: bool = true;
 
     while is_running {
         (&mut chip8).cycle();

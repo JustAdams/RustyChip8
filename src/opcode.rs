@@ -20,7 +20,8 @@ impl Opcode {
         }
     }
 
+    /** For debugging purposes - returns the instruction as hexadecimal */
     pub fn instruction_to_str(&self) -> String {
-        self.instruction.to_string()
+        format!("{:#06x}", self.instruction)
     }
 }

@@ -4,7 +4,7 @@ use crate::rom::ROM;
 
 pub mod rom;
 
-mod display;
+pub mod display;
 mod opcode;
 
 // TODO: display stuff should be in its own module to improve extensibility
@@ -40,6 +40,11 @@ pub struct Chip8 {
     pub idx_reg: u16,
     /** Variable registers - 0xF is used as a flag register */
     pub var_reg: [u8; 16],
+}
+impl Default for Chip8 {
+    fn default() -> Self {
+        Chip8::new()
+    }
 }
 impl Chip8 {
     pub fn new() -> Chip8 {
@@ -79,7 +84,10 @@ impl Chip8 {
             (0xA, _, _, _) => self.op_annn(opcode.nnn),
             (0xD, _, _, _) => self.op_dxyn(opcode.x, opcode.y, opcode.n),
             _ => {
-                //panic!("Unsupported opcode: " + opcode.instruction_to_str());
+                panic!(
+                    "Unsupported opcode: {opcode}",
+                    opcode = opcode.instruction_to_str()
+                );
             }
         }
     }
