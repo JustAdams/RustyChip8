@@ -81,11 +81,11 @@ impl Chip8 {
             (0x3, _, _, _) => self.op_3xnn(opcode.x as usize, opcode.nn),
             (0x4, _, _, _) => self.op_4xnn(opcode.x as usize, opcode.nn),
             (0x5, _, _, _) => self.op_5xnn(opcode.x as usize, opcode.y as usize),
-            (0x6, _, _, _) => self.op_6xnn(opcode.x, opcode.nn),
-            (0x7, _, _, _) => self.op_7xnn(opcode.x, opcode.nn),
+            (0x6, _, _, _) => self.op_6xnn(opcode.x as usize, opcode.nn),
+            (0x7, _, _, _) => self.op_7xnn(opcode.x as usize, opcode.nn),
             (0x9, _, _, _) => self.op_9xnn(opcode.x as usize, opcode.y as usize),
             (0xA, _, _, _) => self.op_annn(opcode.nnn),
-            (0xD, _, _, _) => self.op_dxyn(opcode.x, opcode.y, opcode.n),
+            (0xD, _, _, _) => self.op_dxyn(opcode.x as usize, opcode.y as usize, opcode.n),
             _ => {
                 panic!(
                     "Unsupported opcode: {opcode}",
@@ -150,19 +150,19 @@ impl Chip8 {
     }
 
     /** Stores number NN in register VX */
-    fn op_6xnn(&mut self, x: u8, nn: u8) {
-        if x >= self.var_reg.len() as u8 {
+    fn op_6xnn(&mut self, x: usize, nn: u8) {
+        if x >= self.var_reg.len() {
             panic!("Invalid variable register access attempted");
         }
-        self.var_reg[x as usize] = nn;
+        self.var_reg[x] = nn;
     }
 
     /** Adds NN to register VX */
-    fn op_7xnn(&mut self, x: u8, nn: u8) {
-        if x >= self.var_reg.len() as u8 {
+    fn op_7xnn(&mut self, x: usize, nn: u8) {
+        if x >= self.var_reg.len() {
             panic!("Invalid variable register access attempted");
         }
-        self.var_reg[x as usize] = self.var_reg[x as usize].wrapping_add(nn);
+        self.var_reg[x] = self.var_reg[x].wrapping_add(nn);
     }
 
     /** Sets index register to NNN */
@@ -170,9 +170,9 @@ impl Chip8 {
         self.idx_reg = nnn;
     }
 
-    fn op_dxyn(&mut self, x: u8, y: u8, n: u8) {
-        let y_coord = self.var_reg[y as usize] as usize;
-        let x_coord = self.var_reg[x as usize] as usize & (WIDTH - 1);
+    fn op_dxyn(&mut self, x: usize, y: usize, n: u8) {
+        let y_coord = self.var_reg[y] as usize;
+        let x_coord = self.var_reg[x] as usize & (WIDTH - 1);
 
         self.var_reg[0xF] = 0x0;
 
