@@ -2,9 +2,18 @@ use chip8::Chip8;
 use chip8::rom::ROM;
 use macroquad::color::{BLACK, WHITE};
 use macroquad::shapes::draw_rectangle;
-use macroquad::window::{clear_background, next_frame};
+use macroquad::window::{Conf, clear_background, next_frame};
 
-#[macroquad::main("Chip8")]
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Chip8".to_owned(),
+        window_height: 320,
+        window_width: 640,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(window_conf)]
 async fn main() {
     println!("Hello, Chip8!");
 
