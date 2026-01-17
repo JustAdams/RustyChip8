@@ -92,6 +92,17 @@ mod tests {
         assert_eq!(chip8.var_reg[x], 0x18);
     }
 
+    /** 8XY6 */
+    #[test]
+    fn op_8xy6_success() {
+        let mut chip8 = Chip8::new();
+        assert_eq!(chip8.var_reg[0xF], 0);
+        chip8.var_reg[0x4] = 0x9;
+        load_run_instruction(&mut chip8, &[0x83, 0x46]);
+        assert_eq!(chip8.var_reg[0x3], 4);
+        assert_eq!(chip8.var_reg[0xF], 1);
+    }
+
     /** 9XNN */
     #[test]
     fn op_9xnn_skip_success() {
@@ -110,6 +121,28 @@ mod tests {
         assert_ne!(0x123, chip8.idx_reg);
         load_run_instruction(&mut chip8, &[0xA1, 0x23]);
         assert_eq!(chip8.idx_reg, 0x123);
+    }
+
+    /** FX1E */
+    #[test]
+    fn op_fx1e_success() {
+        let mut chip8: Chip8 = Chip8::new();
+        chip8.var_reg[0x3] = 0x10;
+        assert_eq!(chip8.idx_reg, 0x0);
+        load_run_instruction(&mut chip8, &[0xF3, 0x1E]);
+        assert_eq!(chip8.idx_reg, 0x10);
+    }
+
+    /** FX33 */
+    #[test]
+    fn op_fx33_success() {
+        let mut chip8 = Chip8::new();
+        chip8.var_reg[0x3] = 123;
+        load_run_instruction(&mut chip8, &[0xF3, 0x33]);
+
+        assert_eq!(chip8.ram[chip8.idx_reg as usize], 1);
+        assert_eq!(chip8.ram[chip8.idx_reg as usize + 1], 2);
+        assert_eq!(chip8.ram[chip8.idx_reg as usize + 2], 3);
     }
 
     /** Loads an instruction and runs a single cycle */

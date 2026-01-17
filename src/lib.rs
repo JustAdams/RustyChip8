@@ -30,6 +30,13 @@ const FONT: [u8; 80] = [
     0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 ];
 
+pub enum CurrentKey {
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+}
+
 pub struct Chip8 {
     pub ram: [u8; 4096],
     pub display: Display,
@@ -111,11 +118,14 @@ impl Chip8 {
             },
             (0x9, _, _, _) => self.op_9xnn(opcode.x as usize, opcode.y as usize),
             (0xA, _, _, _) => self.op_annn(opcode.nnn),
+            (0xC, _, _, _) => self.op_cxnn(opcode.x as usize, opcode.nn),
             (0xD, _, _, _) => self.op_dxyn(opcode.x as usize, opcode.y as usize, opcode.n),
             (0xF, _, _, _) => match (nibbles.1, nibbles.2, nibbles.3) {
                 // timers
                 (_, 0x0, 0x7) => self.op_fx07(opcode.x as usize),
                 (_, 0x1, 0x5) => self.op_fx15(opcode.x as usize),
+                (_, 0x1, 0xE) => self.op_fx1e(opcode.x as usize),
+                (_, 0x3, 0x3) => self.op_fx33(opcode.x as usize),
                 (_, 0x5, 0x5) => self.op_fx55(opcode.x as usize),
                 (_, 0x6, 0x5) => self.op_fx65(opcode.x as usize),
                 _ => {
@@ -124,8 +134,8 @@ impl Chip8 {
                         opcode = opcode.instruction_to_str()
                     );
                 }
-            }
-                _ => {
+            },
+            _ => {
                 panic!(
                     "Unsupported opcode: {opcode}",
                     opcode = opcode.instruction_to_str()
@@ -213,7 +223,6 @@ impl Chip8 {
         self.var_reg[x] = self.var_reg[x].wrapping_add(nn);
     }
 
-
     /** Sets VX to the value of VY */
     fn op_8xy0(&mut self, x: usize, y: usize) {
         self.var_reg[x] = self.var_reg[y];
@@ -237,13 +246,25 @@ impl Chip8 {
     }
 
     fn op_8xy5(&mut self, x: usize, y: usize) {
+        match self.var_reg[x] > self.var_reg[y] {
+            true => self.var_reg[0xF] = 1,
+            false => self.var_reg[0xF] = 0,
+        }
         self.var_reg[x] = self.var_reg[x].wrapping_sub(self.var_reg[y]);
     }
 
     /** Shift - puts VY into VX and shifts VX 1 bit to the right */
     fn op_8xy6(&mut self, x: usize, y: usize) {
-        self.var_reg[0xF] = self.var_reg[y] & 0x1;
+        self.var_reg[0xF] = self.var_reg[y] & 1;
         self.var_reg[x] = self.var_reg[y] >> 1;
+    }
+
+    fn op_8xy7(&mut self, x: usize, y: usize) {
+        match self.var_reg[y] > self.var_reg[x] {
+            true => self.var_reg[0xF] = 1,
+            false => self.var_reg[0xF] = 0,
+        }
+        self.var_reg[y] = self.var_reg[y].wrapping_sub(self.var_reg[x]);
     }
 
     /** Shift - puts VY into VX and shifts VX 1 bit to the left */
@@ -253,13 +274,14 @@ impl Chip8 {
         self.var_reg[x] = self.var_reg[y];
     }
 
-    fn op_8xy7(&mut self, x: usize, y: usize) {
-        self.var_reg[y] = self.var_reg[y].wrapping_sub(self.var_reg[x]);
-    }
-
     /** Sets index register to NNN */
     fn op_annn(&mut self, nnn: u16) {
         self.idx_reg = nnn;
+    }
+
+    fn op_cxnn(&mut self, x: usize, nn: u8) {
+        let rand_num: u8 = rand::random::<u8>() & nn;
+        self.var_reg[x] = rand_num;
     }
 
     fn op_dxyn(&mut self, x: usize, y: usize, n: u8) {
@@ -302,6 +324,19 @@ impl Chip8 {
 
     fn op_fx15(&mut self, x: usize) {
         self.delay_timer = self.var_reg[x];
+    }
+
+    fn op_fx1e(&mut self, x: usize) {
+        self.idx_reg = self.idx_reg.wrapping_add(self.var_reg[x] as u16);
+    }
+
+    /** Binary-coded decimal conversion */
+    fn op_fx33(&mut self, x: usize) {
+        let mut val = self.var_reg[x];
+        for i in (0..3).rev() {
+            self.ram[self.idx_reg as usize + i] = val % 10;
+            val /= 10;
+        }
     }
 
     fn op_fx55(&mut self, x: usize) {
