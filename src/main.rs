@@ -1,16 +1,15 @@
 use chip8::Chip8;
 use chip8::rom::ROM;
 use macroquad::color::{BLACK, WHITE};
-use macroquad::input::{KeyCode, is_key_down};
-use macroquad::prelude::is_key_pressed;
+use macroquad::input::{KeyCode, is_key_down, is_key_pressed};
 use macroquad::shapes::{draw_line, draw_rectangle};
 use macroquad::text::draw_text;
 use macroquad::time::get_frame_time;
 use macroquad::window::{Conf, clear_background, next_frame};
 
 const SCALE: f32 = 10.0;
-const GAME_HEIGHT: f32 = chip8::HEIGHT as f32 * SCALE as f32;
-const GAME_WIDTH: f32 = chip8::WIDTH as f32 * SCALE as f32;
+const GAME_HEIGHT: f32 = chip8::HEIGHT as f32 * SCALE;
+const GAME_WIDTH: f32 = chip8::WIDTH as f32 * SCALE;
 
 fn window_conf() -> Conf {
     Conf {
@@ -26,7 +25,7 @@ async fn main() {
     let debug_mode: bool = true;
     let mut opcode_stack: Vec<u16> = vec![];
 
-    let rom: ROM = ROM::new("ROMs/octojam1title.ch8");
+    let rom: ROM = ROM::new("ROMs/flightrunner.ch8");
     let mut chip8: Chip8 = Chip8::new();
     (&mut chip8).load_rom(rom);
 
@@ -39,20 +38,13 @@ async fn main() {
         clear_background(BLACK);
 
         // input
-        if is_key_down(KeyCode::Escape) {
+
+        let curr_key = get_user_input();
+        if is_key_pressed(KeyCode::Escape) {
             is_running = false;
         }
-        let mut curr_key: Option<u8> = None;
 
-        if is_key_down(KeyCode::Key2) {
-            curr_key = Some(0x2);
-        }
-        if is_key_down(KeyCode::W) {
-            curr_key = Some(0x5);
-        }
-        if is_key_down(KeyCode::S) {
-            curr_key = Some(0x8);
-        }
+        chip8.set_input_key(curr_key);
 
         // update timers by 60Hz
         if curr_timer < timer_update {
@@ -98,4 +90,58 @@ async fn main() {
     }
 
     println!("Goodbye");
+}
+
+fn get_user_input() -> Option<u8> {
+    let mut curr_key: Option<u8> = None;
+
+    if is_key_down(KeyCode::Key1) {
+        curr_key = Some(0x1);
+    }
+    if is_key_down(KeyCode::Key2) {
+        curr_key = Some(0x2);
+    }
+    if is_key_down(KeyCode::Key3) {
+        curr_key = Some(0x3);
+    }
+    if is_key_down(KeyCode::Key4) {
+        curr_key = Some(0xC);
+    }
+    if is_key_down(KeyCode::Q) {
+        curr_key = Some(0x4);
+    }
+    if is_key_down(KeyCode::W) {
+        curr_key = Some(0x5);
+    }
+    if is_key_down(KeyCode::E) {
+        curr_key = Some(0x6);
+    }
+    if is_key_down(KeyCode::R) {
+        curr_key = Some(0xD);
+    }
+    if is_key_down(KeyCode::A) {
+        curr_key = Some(0x7);
+    }
+    if is_key_down(KeyCode::S) {
+        curr_key = Some(0x8);
+    }
+    if is_key_down(KeyCode::D) {
+        curr_key = Some(0x9);
+    }
+    if is_key_down(KeyCode::F) {
+        curr_key = Some(0xE);
+    }
+    if is_key_down(KeyCode::Z) {
+        curr_key = Some(0xA);
+    }
+    if is_key_down(KeyCode::X) {
+        curr_key = Some(0x0);
+    }
+    if is_key_down(KeyCode::C) {
+        curr_key = Some(0xB);
+    }
+    if is_key_down(KeyCode::V) {
+        curr_key = Some(0xF);
+    }
+    curr_key
 }

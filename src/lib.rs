@@ -49,6 +49,7 @@ pub struct Chip8 {
     pub call_stack: Vec<u16>,
     pub delay_timer: u8,
     pub sound_timer: u8,
+    pub curr_input_key: Option<u8>,
 }
 impl Default for Chip8 {
     fn default() -> Self {
@@ -66,6 +67,7 @@ impl Chip8 {
             call_stack: Vec::new(),
             delay_timer: 0,
             sound_timer: 0,
+            curr_input_key: None,
         };
 
         for i in 0..FONT.len() {
@@ -98,8 +100,8 @@ impl Chip8 {
             (0x5, _, _, _) => self.op_5xnn(opcode.x as usize, opcode.y as usize),
             (0x6, _, _, _) => self.op_6xnn(opcode.x as usize, opcode.nn),
             (0x7, _, _, _) => self.op_7xnn(opcode.x as usize, opcode.nn),
+            /** ALU Instructions */
             (0x8, _, _, _) => match (nibbles.1, nibbles.2, nibbles.3) {
-                // alu instructions
                 (_, _, 0x0) => self.op_8xy0(opcode.x as usize, opcode.y as usize),
                 (_, _, 0x1) => self.op_8xy1(opcode.x as usize, opcode.y as usize),
                 (_, _, 0x2) => self.op_8xy2(opcode.x as usize, opcode.y as usize),
@@ -122,9 +124,10 @@ impl Chip8 {
             (0xD, _, _, _) => self.op_dxyn(opcode.x as usize, opcode.y as usize, opcode.n),
             (0xE, _, 0x9, 0xE) => self.op_ex9e(opcode.x as usize),
             (0xE, _, 0xA, 0x1) => self.op_exa1(opcode.x as usize),
+            /** Timers */
             (0xF, _, _, _) => match (nibbles.1, nibbles.2, nibbles.3) {
-                // timers
                 (_, 0x0, 0x7) => self.op_fx07(opcode.x as usize),
+                (_, 0x0, 0xA) => self.op_fx0a(opcode.x as usize),
                 (_, 0x1, 0x5) => self.op_fx15(opcode.x as usize),
                 (_, 0x1, 0xE) => self.op_fx1e(opcode.x as usize),
                 (_, 0x3, 0x3) => self.op_fx33(opcode.x as usize),
@@ -151,6 +154,10 @@ impl Chip8 {
         for i in 0..load.len() {
             self.ram[start_pos as usize + i] = load[i];
         }
+    }
+
+    pub fn set_input_key(&mut self, input_key: Option<u8>) {
+        self.curr_input_key = input_key;
     }
 
     /** Decrements timers by a given delta, usually 60 times per second (60Hz) */
@@ -332,16 +339,36 @@ impl Chip8 {
 
     /** Skips instruction if key in VX is pressed */
     fn op_ex9e(&mut self, x: usize) {
-        todo!()
+        match self.curr_input_key {
+            None => self.pc += 2,
+            Some(val) => match self.var_reg[x] == val {
+                true => self.pc += 2,
+                false => {}
+            },
+        }
     }
 
     /** Skips instruction if key in VX is NOT pressed */
     fn op_exa1(&mut self, x: usize) {
-        todo!()
+        match self.curr_input_key {
+            None => self.pc += 2,
+            Some(val) => match self.var_reg[x] == val {
+                true => {}
+                false => self.pc += 2,
+            },
+        }
     }
 
     fn op_fx07(&mut self, x: usize) {
         self.var_reg[x] = self.delay_timer;
+    }
+
+    /** Get key - stops executing instructions and waits for key input */
+    fn op_fx0a(&mut self, x: usize) {
+        match self.curr_input_key {
+            Some(val) => self.var_reg[x] = val,
+            None => self.pc -= 2,
+        }
     }
 
     fn op_fx15(&mut self, x: usize) {
