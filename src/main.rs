@@ -1,5 +1,6 @@
 use chip8::Chip8;
 use chip8::rom::ROM;
+use macroquad::audio;
 use macroquad::color::{BLACK, WHITE};
 use macroquad::input::{KeyCode, is_key_down, is_key_pressed};
 use macroquad::shapes::{draw_line, draw_rectangle};
@@ -25,9 +26,8 @@ fn window_conf() -> Conf {
 async fn main() {
     let debug_mode: bool = true;
     let mut opcode_stack: Vec<u16> = vec![];
-
+    let sound1 = audio::load_sound("resources/sound.wav").await.unwrap();
     let args: Vec<String> = env::args().collect();
-
     let mut rom_path = "IBM Logo.ch8";
     if args.len() > 1 {
         rom_path = &args[1];
@@ -46,12 +46,10 @@ async fn main() {
         clear_background(BLACK);
 
         // input
-
-        let curr_key = get_user_input();
         if is_key_pressed(KeyCode::Escape) {
             is_running = false;
         }
-
+        let curr_key = get_user_input();
         chip8.set_input_key(curr_key);
 
         // update timers by 60Hz
@@ -60,6 +58,9 @@ async fn main() {
             chip8.decrement_timers(1);
         } else {
             curr_timer = 0.0;
+        }
+        if chip8.sound_timer > 0 {
+            audio::play_sound_once(&sound1);
         }
 
         // execute

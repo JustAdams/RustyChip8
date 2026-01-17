@@ -120,6 +120,7 @@ impl Chip8 {
             },
             (0x9, _, _, _) => self.op_9xnn(opcode.x as usize, opcode.y as usize),
             (0xA, _, _, _) => self.op_annn(opcode.nnn),
+            (0xB, _, _, _) => self.op_bnnn(opcode.nnn),
             (0xC, _, _, _) => self.op_cxnn(opcode.x as usize, opcode.nn),
             (0xD, _, _, _) => self.op_dxyn(opcode.x as usize, opcode.y as usize, opcode.n),
             (0xE, _, 0x9, 0xE) => self.op_ex9e(opcode.x as usize),
@@ -129,6 +130,7 @@ impl Chip8 {
                 (_, 0x0, 0x7) => self.op_fx07(opcode.x as usize),
                 (_, 0x0, 0xA) => self.op_fx0a(opcode.x as usize),
                 (_, 0x1, 0x5) => self.op_fx15(opcode.x as usize),
+                (_, 0x1, 0x8) => self.op_fx18(opcode.x as usize),
                 (_, 0x1, 0xE) => self.op_fx1e(opcode.x as usize),
                 (_, 0x3, 0x3) => self.op_fx33(opcode.x as usize),
                 (_, 0x5, 0x5) => self.op_fx55(opcode.x as usize),
@@ -298,6 +300,11 @@ impl Chip8 {
         self.idx_reg = nnn;
     }
 
+    /** Jumps to NNN plus value in V0 */
+    fn op_bnnn(&mut self, nnn: u16) {
+        self.pc = nnn + self.var_reg[0x0] as u16;
+    }
+
     fn op_cxnn(&mut self, x: usize, nn: u8) {
         let rand_num: u8 = rand::random::<u8>() & nn;
         self.var_reg[x] = rand_num;
@@ -373,6 +380,11 @@ impl Chip8 {
 
     fn op_fx15(&mut self, x: usize) {
         self.delay_timer = self.var_reg[x];
+    }
+
+    /** Sets sound timer to value in VX */
+    fn op_fx18(&mut self, x: usize) {
+        self.sound_timer = self.var_reg[x];
     }
 
     fn op_fx1e(&mut self, x: usize) {
