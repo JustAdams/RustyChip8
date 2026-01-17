@@ -6,6 +6,7 @@ use macroquad::shapes::{draw_line, draw_rectangle};
 use macroquad::text::draw_text;
 use macroquad::time::get_frame_time;
 use macroquad::window::{Conf, clear_background, next_frame};
+use std::env;
 
 const SCALE: f32 = 10.0;
 const GAME_HEIGHT: f32 = chip8::HEIGHT as f32 * SCALE;
@@ -25,7 +26,14 @@ async fn main() {
     let debug_mode: bool = true;
     let mut opcode_stack: Vec<u16> = vec![];
 
-    let rom: ROM = ROM::new("ROMs/flightrunner.ch8");
+    let args: Vec<String> = env::args().collect();
+
+    let mut rom_path = "IBM Logo.ch8";
+    if args.len() > 1 {
+        rom_path = &args[1];
+    }
+
+    let rom: ROM = ROM::new(format!("ROMs/{rom_path}").as_str());
     let mut chip8: Chip8 = Chip8::new();
     (&mut chip8).load_rom(rom);
 
