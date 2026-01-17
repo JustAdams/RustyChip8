@@ -120,6 +120,8 @@ impl Chip8 {
             (0xA, _, _, _) => self.op_annn(opcode.nnn),
             (0xC, _, _, _) => self.op_cxnn(opcode.x as usize, opcode.nn),
             (0xD, _, _, _) => self.op_dxyn(opcode.x as usize, opcode.y as usize, opcode.n),
+            (0xE, _, 0x9, 0xE) => self.op_ex9e(opcode.x as usize),
+            (0xE, _, 0xA, 0x1) => self.op_exa1(opcode.x as usize),
             (0xF, _, _, _) => match (nibbles.1, nibbles.2, nibbles.3) {
                 // timers
                 (_, 0x0, 0x7) => self.op_fx07(opcode.x as usize),
@@ -151,7 +153,17 @@ impl Chip8 {
         }
     }
 
-    /** Returns the instruction  sitting at the current PC location. Will increment the PC by 2. */
+    /** Decrements timers by a given delta, usually 60 times per second (60Hz) */
+    pub fn decrement_timers(&mut self, delta: u8) {
+        if self.delay_timer > 0 {
+            self.delay_timer -= delta;
+        }
+        if self.sound_timer > 0 {
+            self.sound_timer -= delta;
+        }
+    }
+
+    /** Returns the instruction sitting at the current PC location. Will increment the PC by 2. */
     fn fetch_instruction(&mut self) -> u16 {
         let mut opcode: u16 = (self.ram[self.pc as usize] as u16) << 8;
         opcode |= self.ram[self.pc as usize + 1] as u16;
@@ -316,6 +328,16 @@ impl Chip8 {
                 self.display.flip_pixel(y_pos, x_pos);
             }
         }
+    }
+
+    /** Skips instruction if key in VX is pressed */
+    fn op_ex9e(&mut self, x: usize) {
+        todo!()
+    }
+
+    /** Skips instruction if key in VX is NOT pressed */
+    fn op_exa1(&mut self, x: usize) {
+        todo!()
     }
 
     fn op_fx07(&mut self, x: usize) {
