@@ -2,8 +2,8 @@
 
 Chip8 is a simple virtual machine.
 
-![Discord_9RP3HKI9Y2](https://github.com/user-attachments/assets/3e597c36-e94f-40e6-81c4-02e5a36dd5e5)
-GIF ROM: octojam1title.ch8
+![chip8_R1IQKNaLWe](https://github.com/user-attachments/assets/8e02e0f3-a556-4019-a21d-dd727df4f913)
+GIF ROM: outlaw.ch8
 
 ## Controls
 The top left of a QWERTY keyboard is used for this implementation. I make no guarantee that the key ordering will match the orderings that the author of any given ROM has intended.
