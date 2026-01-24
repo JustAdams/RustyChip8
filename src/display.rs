@@ -1,23 +1,24 @@
 pub const WIDTH: usize = 64;
 pub const HEIGHT: usize = 32;
-const SCREEN_SIZE: usize = WIDTH * HEIGHT;
 
 pub struct Display {
-    buffer: [[bool; WIDTH]; HEIGHT],
+    buffer: [bool; WIDTH * HEIGHT],
 }
 impl Display {
     pub fn new() -> Display {
         Display {
-            buffer: [[false; WIDTH]; HEIGHT],
+            buffer: [false; WIDTH * HEIGHT],
         }
     }
     pub fn clear(&mut self) {
-        self.buffer = [[false; WIDTH]; HEIGHT];
+        self.buffer = [false; WIDTH * HEIGHT];
     }
     pub fn get_pixel(&self, y: usize, x: usize) -> bool {
-        self.buffer[y][x]
+        let pos = (y * WIDTH) + x;
+        self.buffer[pos]
     }
     pub fn flip_pixel(&mut self, y: usize, x: usize) {
-        self.buffer[y][x] = !self.buffer[y][x];
+        let pos = (y * WIDTH) + x;
+        self.buffer[pos] = !self.buffer[pos];
     }
 }

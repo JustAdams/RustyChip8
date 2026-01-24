@@ -9,7 +9,6 @@ mod opcode;
 
 pub const WIDTH: usize = 64;
 pub const HEIGHT: usize = 32;
-const SCREEN_SIZE: usize = WIDTH * HEIGHT;
 
 const FONT: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -100,7 +99,7 @@ impl Chip8 {
             (0x5, _, _, _) => self.op_5xnn(opcode.x as usize, opcode.y as usize),
             (0x6, _, _, _) => self.op_6xnn(opcode.x as usize, opcode.nn),
             (0x7, _, _, _) => self.op_7xnn(opcode.x as usize, opcode.nn),
-            /** ALU Instructions */
+            // ALU Instructions
             (0x8, _, _, _) => match (nibbles.1, nibbles.2, nibbles.3) {
                 (_, _, 0x0) => self.op_8xy0(opcode.x as usize, opcode.y as usize),
                 (_, _, 0x1) => self.op_8xy1(opcode.x as usize, opcode.y as usize),
@@ -125,7 +124,7 @@ impl Chip8 {
             (0xD, _, _, _) => self.op_dxyn(opcode.x as usize, opcode.y as usize, opcode.n),
             (0xE, _, 0x9, 0xE) => self.op_ex9e(opcode.x as usize),
             (0xE, _, 0xA, 0x1) => self.op_exa1(opcode.x as usize),
-            /** Timers */
+            // Timers
             (0xF, _, _, _) => match (nibbles.1, nibbles.2, nibbles.3) {
                 (_, 0x0, 0x7) => self.op_fx07(opcode.x as usize),
                 (_, 0x0, 0xA) => self.op_fx0a(opcode.x as usize),
@@ -331,7 +330,7 @@ impl Chip8 {
                     break;
                 }
 
-                let y_pos = (y_coord + row as usize) % HEIGHT;
+                let y_pos = (y_coord + row as usize) & (HEIGHT - 1);
                 let curr_pixel = self.display.get_pixel(y_pos, x_pos);
 
                 // set VF to 1 if sprite pixel and display pixel are both on

@@ -13,6 +13,8 @@ const SCALE: f32 = 10.0;
 const GAME_HEIGHT: f32 = chip8::HEIGHT as f32 * SCALE;
 const GAME_WIDTH: f32 = chip8::WIDTH as f32 * SCALE;
 
+const CYCLES_PER_FRAME: usize = 10; // running at 600 cycles per second
+
 fn window_conf() -> Conf {
     Conf {
         window_title: "Chip8".to_owned(),
@@ -43,8 +45,6 @@ async fn main() {
     let timer_update = 60.0;
 
     while is_running {
-        clear_background(BLACK);
-
         // input
         if is_key_pressed(KeyCode::Escape) {
             is_running = false;
@@ -64,13 +64,16 @@ async fn main() {
         }
 
         // execute
-        (&mut chip8).cycle();
+        for _ in 0..CYCLES_PER_FRAME {
+            (&mut chip8).cycle();
+        }
 
         // draw display to terminal
+        clear_background(BLACK);
         for row in 0..chip8::HEIGHT {
+            let y_coord = row as f32 * SCALE;
             for col in 0..chip8::WIDTH {
                 let x_coord = col as f32 * SCALE;
-                let y_coord = row as f32 * SCALE;
                 match chip8.display.get_pixel(row, col) {
                     true => draw_rectangle(x_coord, y_coord, SCALE, SCALE, WHITE),
                     false => {
@@ -97,8 +100,6 @@ async fn main() {
 
         next_frame().await
     }
-
-    println!("Goodbye");
 }
 
 fn get_user_input() -> Option<u8> {
