@@ -1,6 +1,6 @@
 # Writing a basic Chip 8 interpreter in Rust
 
-Chip8 is a simple virtual machine.
+Chip8 is a simple virtual machine that executes Chip8 ROMs.
 
 ![chip8_R1IQKNaLWe](https://github.com/user-attachments/assets/8e02e0f3-a556-4019-a21d-dd727df4f913)
 GIF ROM: outlaw.ch8
